@@ -1,0 +1,50 @@
+[
+  {
+    "id": "dsa-core",
+    "title": "DSA Core Interview Questions",
+    "description": "Most asked Data Structures & Algorithms questions",
+    "topic": "DSA",
+    "difficulty": "Medium",
+    "duration": 30
+  },
+  {
+    "id": "dbms-core",
+    "title": "DBMS Interview Questions",
+    "description": "Database Management System interview questions",
+    "topic": "DBMS",
+    "difficulty": "Medium",
+    "duration": 25
+  },
+  {
+    "id": "os-core",
+    "title": "Operating System Interview Questions",
+    "description": "Core OS interview questions",
+    "topic": "OS",
+    "difficulty": "Medium",
+    "duration": 25
+  },
+  {
+    "id": "oops-core",
+    "title": "OOPS Interview Questions",
+    "description": "Object-Oriented Programming interview questions",
+    "topic": "OOPS",
+    "difficulty": "Easy",
+    "duration": 20
+  },
+  {
+    "id": "web-core",
+    "title": "Web Development Interview Questions",
+    "description": "Frontend and Backend interview questions",
+    "topic": "Web",
+    "difficulty": "Easy",
+    "duration": 20
+  },
+  {
+    "id": "aptitude-core",
+    "title": "Aptitude & Logical Reasoning",
+    "description": "Logical reasoning interview questions",
+    "topic": "Aptitude",
+    "difficulty": "Medium",
+    "duration": 20
+  }
+]
