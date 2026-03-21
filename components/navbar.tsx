@@ -44,7 +44,7 @@ export default function Navbar() {
         <div className="flex items-center gap-8">
 
           {/* LOGO */}
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-sm">
               PB
             </div>
@@ -54,7 +54,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* DESKTOP NAV LINKS */}
+          {/* DESKTOP NAV LINKS (ONLY IF LOGGED IN) */}
           {user && (
             <div className="hidden lg:flex gap-6 text-sm">
               {navLinks.map((link) => (
@@ -72,35 +72,52 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT SIDE */}
-        {user && (
-          <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
 
-            <span className="hidden sm:block text-sm text-foreground/70">
-              Welcome, {user.displayName || user.email}
-            </span>
+          {user ? (
+            <>
+              <span className="hidden sm:block text-sm text-foreground/70">
+                Welcome, {user.displayName || user.email}
+              </span>
 
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="text-xs border-primary/30 hover:bg-red-500/10"
-            >
-              <LogOut size={14} className="mr-1" /> Logout
-            </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="text-xs border-primary/30 hover:bg-red-500/10"
+              >
+                <LogOut size={14} className="mr-1" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
 
-            {/* MOBILE MENU BUTTON */}
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden p-2"
-            >
-              {isOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+              <Link href="/signup">
+                <Button size="sm">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
 
-          </div>
-        )}
+          {/* MOBILE MENU BUTTON */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="lg:hidden p-2"
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+
+        </div>
 
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE NAV LINKS */}
       {isOpen && user && (
         <div className="lg:hidden border-t border-border/30 px-4 py-4 space-y-2">
           {navLinks.map((link) => (

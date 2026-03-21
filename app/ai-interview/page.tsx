@@ -27,6 +27,7 @@ interface SessionMetrics {
 
 function AIInterviewContent() {
   const [mode, setMode] = useState<"technical" | "hr">("technical")
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -36,9 +37,11 @@ function AIInterviewContent() {
       timestamp: new Date(),
     },
   ])
+
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showMetrics, setShowMetrics] = useState(true)
+
   const [sessionMetrics, setSessionMetrics] = useState<SessionMetrics>({
     questionsAsked: 1,
     avgScore: 0,
@@ -46,7 +49,7 @@ function AIInterviewContent() {
     improvements: ["Consider edge cases"],
   })
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim()) return
 
     const userMessage: Message = {
@@ -56,26 +59,46 @@ function AIInterviewContent() {
       timestamp: new Date(),
     }
 
-    setMessages([...messages, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+          mode,
+        }),
+      })
+
+      const data = await res.json()
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `That's a great approach! Let me provide some feedback on your answer...`,
+        content: data.text,
         timestamp: new Date(),
-        feedback: [
-          { type: "positive", text: "You explained your approach clearly" },
-          { type: "improvement", text: "Consider optimizing for space complexity" },
-          { type: "tip", text: "Always ask clarifying questions first" },
-        ],
       }
+
       setMessages((prev) => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1000)
+    } catch (error) {
+      console.error("AI Error:", error)
+
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        role: "assistant",
+        content: "⚠️ Failed to get AI response. Please try again.",
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, errorMessage])
+    }
+
+    setIsLoading(false)
   }
 
   const handleNewSession = () => {
@@ -84,10 +107,11 @@ function AIInterviewContent() {
         id: "1",
         role: "assistant",
         content:
-          "Hello! I'm your AI interview coach. Let's practice a new interview. Choose your preferred type and difficulty level.",
+          "Hello! I'm your AI interview coach. Let's practice a new interview.",
         timestamp: new Date(),
       },
     ])
+
     setSessionMetrics({
       questionsAsked: 1,
       avgScore: 0,
@@ -98,195 +122,174 @@ function AIInterviewContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">AI Interview Coach</h1>
-          <p className="text-foreground/60">Practice with real-time feedback and personalized coaching</p>
+          <h1 className="text-3xl font-bold mb-2">AI Interview Coach</h1>
+          <p className="text-foreground/60">
+            Practice with real-time feedback and personalized coaching
+          </p>
         </div>
 
         {/* Mode Selector */}
         <div className="flex gap-4 mb-8">
+
           <button
             onClick={() => setMode("technical")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all border ${
+            className={`px-6 py-3 rounded-lg font-semibold border ${
               mode === "technical"
                 ? "border-primary/50 bg-primary/20 text-primary"
-                : "border-border/50 hover:border-primary/40 hover:bg-primary/5 bg-transparent"
+                : "border-border/50 hover:border-primary/40 hover:bg-primary/5"
             }`}
           >
             Technical Interview
           </button>
+
           <button
             onClick={() => setMode("hr")}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all border ${
+            className={`px-6 py-3 rounded-lg font-semibold border ${
               mode === "hr"
                 ? "border-primary/50 bg-primary/20 text-primary"
-                : "border-border/50 hover:border-primary/40 hover:bg-primary/5 bg-transparent"
+                : "border-border/50 hover:border-primary/40 hover:bg-primary/5"
             }`}
           >
             HR Interview
           </button>
+
         </div>
 
-        {/* Main Interview Container */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
           {/* Chat Area */}
           <div className="lg:col-span-2">
-            <Card className="p-6 border-border/50 bg-card/50 h-96 md:h-[600px] flex flex-col">
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+
+            <Card className="p-6 h-[600px] flex flex-col">
+
+              <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+
                 {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      msg.role === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                      className={`max-w-md px-4 py-3 rounded-lg ${
                         msg.role === "user"
-                          ? "bg-gradient-to-r from-primary to-accent text-foreground"
-                          : "bg-background/60 border border-border/30 text-foreground/90"
+                          ? "bg-gradient-to-r from-primary to-accent"
+                          : "bg-background border"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                      {msg.feedback && <InterviewFeedback feedback={msg.feedback} />}
-                      <span className="text-xs opacity-70 mt-2 block">
-                        {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      <p className="text-sm">{msg.content}</p>
+
+                      {msg.feedback && (
+                        <InterviewFeedback feedback={msg.feedback} />
+                      )}
+
+                      <span className="text-xs opacity-70 block mt-2">
+                        {msg.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
                   </div>
                 ))}
+
                 {isLoading && (
-                  <div className="flex items-center gap-2 text-foreground/60">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader size={16} className="animate-spin" />
-                    <span className="text-sm">AI Coach is thinking...</span>
+                    AI Coach is thinking...
                   </div>
                 )}
+
               </div>
 
-              {/* Input Area */}
+              {/* Input */}
               <div className="flex gap-2">
+
                 <input
-                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   placeholder="Type your answer..."
-                  className="flex-1 px-4 py-2 text-sm rounded-lg bg-background/50 border border-border/30 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  className="flex-1 px-4 py-2 rounded-lg border bg-background"
                   disabled={isLoading}
                 />
+
                 <Button
                   onClick={handleSendMessage}
                   disabled={isLoading || !input.trim()}
-                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 flex items-center gap-2"
                 >
                   <Send size={16} />
                 </Button>
+
               </div>
+
             </Card>
+
           </div>
 
-          {/* Metrics Sidebar */}
+          {/* Sidebar */}
           {showMetrics && (
             <div className="space-y-4">
-              <Card className="p-6 border-border/50 bg-card/50">
-                <div className="flex items-center justify-between mb-4">
+
+              <Card className="p-6">
+
+                <div className="flex justify-between mb-4">
                   <h3 className="font-bold">Session Metrics</h3>
+
                   <button
                     onClick={() => setShowMetrics(false)}
-                    className="text-foreground/60 hover:text-foreground transition-colors"
+                    className="text-muted-foreground"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="p-3 bg-background/50 rounded-lg">
-                    <p className="text-xs text-foreground/60 mb-1">Questions Asked</p>
-                    <p className="text-2xl font-bold text-primary">{sessionMetrics.questionsAsked}</p>
-                  </div>
+                <p className="text-sm">Questions Asked</p>
+                <p className="text-2xl font-bold">
+                  {sessionMetrics.questionsAsked}
+                </p>
 
-                  <div className="p-3 bg-background/50 rounded-lg">
-                    <p className="text-xs text-foreground/60 mb-1">Average Score</p>
-                    <p className="text-2xl font-bold text-accent">{sessionMetrics.avgScore}%</p>
-                  </div>
+                <p className="text-sm mt-4">Average Score</p>
+                <p className="text-2xl font-bold">
+                  {sessionMetrics.avgScore}%
+                </p>
 
-                  <div>
-                    <p className="text-xs font-semibold text-primary mb-2">Strengths</p>
-                    <div className="space-y-1">
-                      {sessionMetrics.strengths.map((strength, i) => (
-                        <div key={i} className="text-xs text-green-400 flex items-center gap-1">
-                          <span>✓</span>
-                          {strength}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <Button
+                  className="w-full mt-6"
+                  onClick={handleNewSession}
+                >
+                  <RotateCcw size={16} />
+                  New Session
+                </Button>
 
-                  <div>
-                    <p className="text-xs font-semibold text-primary mb-2">Areas to Improve</p>
-                    <div className="space-y-1">
-                      {sessionMetrics.improvements.map((improve, i) => (
-                        <div key={i} className="text-xs text-yellow-400 flex items-center gap-1">
-                          <span>!</span>
-                          {improve}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 border-border/50 hover:bg-primary/10 bg-transparent flex items-center justify-center gap-1"
-                    >
-                      <Copy size={14} />
-                      Copy
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 border-border/50 hover:bg-primary/10 bg-transparent flex items-center justify-center gap-1"
-                    >
-                      <Download size={14} />
-                      Export
-                    </Button>
-                  </div>
-
-                  <Button
-                    onClick={handleNewSession}
-                    className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 flex items-center justify-center gap-2 text-sm"
-                  >
-                    <RotateCcw size={16} />
-                    New Session
-                  </Button>
-                </div>
               </Card>
 
-              {/* Pro Tips */}
-              <Card className="p-6 border-border/50 bg-card/50">
-                <div className="flex items-center gap-2 mb-4">
-                  <Zap size={18} className="text-primary" />
+              {/* Tips */}
+              <Card className="p-6">
+
+                <div className="flex gap-2 mb-4">
+                  <Zap size={18} />
                   <h3 className="font-bold">Pro Tips</h3>
                 </div>
-                <ul className="space-y-2 text-xs text-foreground/70">
-                  <li className="flex gap-2">
-                    <span className="text-primary">•</span>
-                    <span>Think out loud while solving</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary">•</span>
-                    <span>Clarify requirements first</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary">•</span>
-                    <span>Mention your assumptions</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-primary">•</span>
-                    <span>Discuss trade-offs</span>
-                  </li>
+
+                <ul className="space-y-2 text-xs">
+                  <li>• Think out loud while solving</li>
+                  <li>• Clarify requirements first</li>
+                  <li>• Mention your assumptions</li>
+                  <li>• Discuss trade-offs</li>
                 </ul>
+
               </Card>
+
             </div>
           )}
+
         </div>
       </div>
     </main>

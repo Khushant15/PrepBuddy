@@ -1,7 +1,8 @@
 {
-  "name": "my-v0-project",
+  "name": "interview-prep-web-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -9,6 +10,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -52,7 +54,6 @@
     "next": "16.0.10",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.12",
-    "type": "module",
     "react": "^19.2.3",
     "react-day-picker": "9.8.0",
     "react-dom": "^19.2.3",

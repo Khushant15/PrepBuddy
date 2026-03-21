@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+
 import { auth, db } from "@/lib/firebase"
 
 import {
@@ -17,6 +18,12 @@ import {
   serverTimestamp,
 } from "firebase/firestore"
 
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+
+import { AnimatedGradient } from "@/components/animated-gradient"
+import { ParticlesBackground } from "@/components/particles-background"
+
 export default function SignupPage() {
 
   const router = useRouter()
@@ -27,7 +34,7 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState("")
   const [error, setError] = useState("")
 
-  // 🔵 GOOGLE SIGNUP
+  // GOOGLE SIGNUP
   const handleGoogle = async () => {
     try {
 
@@ -37,7 +44,6 @@ export default function SignupPage() {
       const user = result.user
       const userRef = doc(db, "users", user.uid)
 
-      // 🔥 Safe write (create OR update)
       await setDoc(
         userRef,
         {
@@ -58,8 +64,7 @@ export default function SignupPage() {
     }
   }
 
-
-  // 🟣 EMAIL SIGNUP
+  // EMAIL SIGNUP
   const handleSignup = async (e: any) => {
 
     e.preventDefault()
@@ -77,14 +82,12 @@ export default function SignupPage() {
 
       const user = result.user
 
-      // save display name in Firebase Auth
       await updateProfile(user, {
         displayName: name
       })
 
       const userRef = doc(db, "users", user.uid)
 
-      // 🔥 Safe write to Firestore
       await setDoc(
         userRef,
         {
@@ -105,66 +108,95 @@ export default function SignupPage() {
     }
   }
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900">
 
-      <div className="w-full max-w-md bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+    <main className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
 
-        <h1 className="text-3xl font-bold text-center text-purple-400 mb-4">
-          Create Account
-        </h1>
+      {/* SAME BACKGROUND AS OTHER PAGES */}
+      <AnimatedGradient />
+      <ParticlesBackground />
 
-        {error && (
-          <p className="text-red-400 text-sm mb-3">{error}</p>
-        )}
+      <div className="relative z-10 w-full max-w-md px-4">
 
-        <button
-          onClick={handleGoogle}
-          className="w-full mb-4 py-3 bg-purple-600 rounded text-white"
-        >
-          Continue with Google
-        </button>
+        <Card className="p-8 border-primary/20 bg-card/40 backdrop-blur-sm shadow-lg shadow-primary/20">
 
-        <form onSubmit={handleSignup} className="space-y-3">
+          <h1 className="text-3xl font-bold text-center mb-4">
+            Create Account
+          </h1>
 
-          <input
-            placeholder="Full Name"
-            value={name}
-            onChange={(e)=>setName(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-black/40 text-white"
-          />
+          {error && (
+            <p className="text-red-400 text-sm mb-4 text-center">
+              {error}
+            </p>
+          )}
 
-          <input
-            placeholder="Email"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-black/40 text-white"
-          />
+          <Button
+            onClick={handleGoogle}
+            className="w-full mb-4 bg-gradient-to-r from-primary to-accent"
+          >
+            Continue with Google
+          </Button>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e)=>setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-black/40 text-white"
-          />
+          <form onSubmit={handleSignup} className="space-y-4">
 
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirm}
-            onChange={(e)=>setConfirm(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-black/40 text-white"
-          />
+            <input
+              required
+              placeholder="Full Name"
+              value={name}
+              onChange={(e)=>setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
+            />
 
-          <button className="w-full py-2 bg-purple-600 rounded text-white">
-            Signup
-          </button>
+            <input
+              required
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e)=>setEmail(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
+            />
 
-        </form>
+            <input
+              required
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e)=>setPassword(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
+            />
+
+            <input
+              required
+              type="password"
+              placeholder="Confirm Password"
+              value={confirm}
+              onChange={(e)=>setConfirm(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
+            />
+
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-primary to-accent"
+            >
+              Sign Up
+            </Button>
+
+          </form>
+
+          <p className="text-center text-sm text-foreground/70 mt-6">
+            Already have an account?{" "}
+            <span
+              className="text-primary cursor-pointer"
+              onClick={() => router.push("/login")}
+            >
+              Login
+            </span>
+          </p>
+
+        </Card>
 
       </div>
-    </div>
+
+    </main>
   )
 }

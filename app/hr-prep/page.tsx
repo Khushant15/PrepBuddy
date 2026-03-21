@@ -4,161 +4,249 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { hrQuestions } from "@/lib/questions-data"
-import { ChevronDown, MessageCircle, Play } from "lucide-react"
-
-type HRCategory = "Intro" | "Strengths" | "Failures" | "STAR" | "Culture" | "Questions"
+import { ExternalLink } from "lucide-react"
 
 function HRPrepContent() {
-  const [selectedCategory, setSelectedCategory] = useState<HRCategory>("Intro")
-  const [expandedId, setExpandedId] = useState<string>("")
-  const [notes, setNotes] = useState<{ [key: string]: string }>({})
-  const [notesVisible, setNotesVisible] = useState<Set<string>>(new Set())
+  const [openQuestion, setOpenQuestion] = useState<string | null>(null)
 
-  const categories: { id: HRCategory; label: string; description: string }[] = [
-    { id: "Intro", label: "Introduction", description: "Start strong with a compelling introduction" },
-    { id: "Strengths", label: "Strengths", description: "Showcase your key skills and achievements" },
-    { id: "Failures", label: "Failures & Learning", description: "Turn setbacks into growth stories" },
-    { id: "STAR", label: "STAR Method", description: "Master behavioral question framework" },
-    { id: "Culture", label: "Culture Fit", description: "Show alignment with company values" },
-    { id: "Questions", label: "Your Questions", description: "Ask thoughtful questions back" },
+  const sections = [
+    {
+      title: "General Questions",
+      questions: [
+        "Tell me about yourself?",
+        "Why are you applying for this job?",
+        "What do you know about our company?",
+        "Why should we hire you?",
+        "Describe yourself in three words.",
+        "Describe yourself in one word.",
+        "What are your strengths?",
+        "What are your weaknesses?",
+        "What are your hobbies?",
+        "What are your achievements in life?",
+        "What is your objective in life?",
+        "What makes you unique?",
+        "How do you handle failure?",
+        "How do you handle success?"
+      ]
+    },
+    {
+      title: "Behavioral Questions",
+      questions: [
+        "Tell me about a time you faced a challenge at work.",
+        "Give an example of when you worked in a team.",
+        "Describe a conflict with a coworker and how you resolved it.",
+        "Have you ever failed at something? What did you learn?",
+        "Tell me about a time you had to meet a tight deadline.",
+        "Have you ever led a team?",
+        "Give an example of when you went above and beyond.",
+        "Tell me about adapting to a big change.",
+        "Describe learning a new skill quickly."
+      ]
+    },
+    {
+      title: "Work Ethic & Motivation",
+      questions: [
+        "What motivates you to work?",
+        "How do you handle stress or pressure?",
+        "How do you prioritize tasks?",
+        "What is your work style?",
+        "How do you handle criticism?",
+        "Do you prefer working independently or in a team?",
+        "What if you disagree with a manager’s decision?",
+        "How do you stay organized?",
+        "Would you work overtime or odd hours?",
+        "What does success mean to you?",
+        "Difference between confidence and overconfidence?",
+        "Difference between smart work and hard work?"
+      ]
+    },
+    {
+      title: "Salary & Availability",
+      questions: [
+        "What are your salary expectations?",
+        "When can you start working?",
+        "Do you have other job offers?",
+        "Are you open to contract or freelance work?",
+        "Would you accept a lower salary for the right opportunity?",
+        "How long would you expect to work for us?"
+      ]
+    },
+    {
+      title: "Company Specific Questions",
+      questions: [
+        "How will you contribute to our company’s success?",
+        "What do you expect from us as an employer?",
+        "What makes a great workplace culture?",
+        "How do you handle a difficult manager?",
+        "How do you stay updated with industry trends?",
+        "What do you like about our company’s mission?"
+      ]
+    },
+    {
+      title: "Resume Related Questions",
+      questions: [
+        "Can you walk me through your resume?",
+        "Why are you leaving your current job?",
+        "Explain any employment gaps.",
+        "What motivated your career path?",
+        "Which skills from past jobs help you here?",
+        "How did your previous job prepare you for this role?",
+        "Tell me about a project you are proud of.",
+        "Why did you choose your degree?"
+      ]
+    }
   ]
 
-  const categoryQuestions = hrQuestions.filter((q) => q.category === selectedCategory)
+  const answerTips: { [key: string]: string } = {
+    "Tell me about yourself?":
+      "Give a 60–90 second summary: background → skills → achievements → why you're interested in the role.",
 
-  const toggleNotesVisible = (id: string) => {
-    const newVisible = new Set(notesVisible)
-    if (newVisible.has(id)) {
-      newVisible.delete(id)
-    } else {
-      newVisible.add(id)
-    }
-    setNotesVisible(newVisible)
+    "Why are you applying for this job?":
+      "Connect your skills and interests with the role and the company's goals.",
+
+    "What do you know about our company?":
+      "Mention company products, achievements, mission, and culture.",
+
+    "Why should we hire you?":
+      "Highlight your key strengths and explain how you can add value.",
+
+    "Describe yourself in three words.":
+      "Choose professional traits and justify them briefly.",
+
+    "Describe yourself in one word.":
+      "Pick a strong professional quality and support it with an example.",
+
+    "What are your strengths?":
+      "Mention 2–3 strengths with real examples.",
+
+    "What are your weaknesses?":
+      "Mention a real weakness and show how you are improving.",
+
+    "What motivates you to work?":
+      "Talk about learning, impact, solving problems, or growth.",
+
+    "How do you handle stress or pressure?":
+      "Explain your strategy like prioritization, planning, and staying calm.",
+
+    "How do you prioritize tasks?":
+      "Mention prioritization techniques like urgent vs important tasks.",
+
+    "What are your salary expectations?":
+      "Provide a reasonable range and mention flexibility.",
+
+    "When can you start working?":
+      "State your availability honestly.",
+
+    "Can you walk me through your resume?":
+      "Explain your education, experience, and relevant achievements.",
+
+    "Why are you leaving your current job?":
+      "Focus on growth and opportunities.",
+
+    "Explain any employment gaps.":
+      "Be honest and explain productive activities during the gap.",
+
+    "Tell me about a project you are proud of.":
+      "Explain the project, your role, and its impact."
   }
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">HR Interview Prep</h1>
-          <p className="text-foreground/60">
-            Master behavioral questions with expert tips, sample answers, and practice strategies
+      <div className="container mx-auto max-w-6xl px-4 py-10">
+
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold mb-3">HR Interview Preparation</h1>
+          <p className="text-foreground/70 text-lg">
+            Prepare for HR interviews with categorized questions and quick tips on how to answer them effectively.
           </p>
         </div>
 
-        {/* Category Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.id)
-                setExpandedId("")
-              }}
-              className={`p-4 rounded-lg text-left transition-all border ${
-                selectedCategory === cat.id
-                  ? "border-primary/50 bg-gradient-to-br from-primary/20 to-accent/10"
-                  : "border-border/50 bg-card/40 hover:border-primary/40 hover:bg-card/60"
-              }`}
-            >
-              <h3
-                className={`font-bold text-sm mb-1 ${selectedCategory === cat.id ? "text-primary" : "text-foreground"}`}
-              >
-                {cat.label}
-              </h3>
-              <p className="text-xs text-foreground/60">{cat.description}</p>
-            </button>
-          ))}
-        </div>
+        <Card className="p-6 mb-10 border-primary/30 bg-primary/10">
+          <h2 className="text-xl font-bold mb-4 text-primary">
+            How to Prepare for an HR Interview
+          </h2>
 
-        {/* Questions */}
-        <div className="space-y-4">
-          {categoryQuestions.map((question) => (
-            <Card
-              key={question.id}
-              className="border-border/50 bg-card/50 overflow-hidden hover:border-primary/40 transition-all"
-            >
-              <button
-                onClick={() => setExpandedId(expandedId === question.id ? "" : question.id)}
-                className="w-full text-left flex items-start justify-between gap-4 p-6 hover:bg-primary/5 transition-colors"
-              >
-                <h3 className="text-lg font-bold flex-1 group-hover:text-primary">{question.question}</h3>
-                <ChevronDown
-                  size={20}
-                  className={`shrink-0 transition-transform text-primary ${expandedId === question.id ? "rotate-180" : ""}`}
-                />
-              </button>
+          <ul className="space-y-2 text-foreground/80">
+            <li>• Research the company and its culture.</li>
+            <li>• Understand the job description.</li>
+            <li>• Practice common HR questions.</li>
+            <li>• Be confident and authentic.</li>
+            <li>• Dress professionally.</li>
+            <li>• Ask thoughtful questions.</li>
+          </ul>
+        </Card>
 
-              {expandedId === question.id && (
-                <div className="p-6 border-t border-border/30 space-y-6 bg-background/20">
-                  {/* Sample Answer */}
-                  <div>
-                    <h4 className="font-bold text-sm text-primary mb-3 flex items-center gap-2">Sample Answer</h4>
-                    <div className="bg-background/50 border border-border/30 rounded-lg p-4">
-                      <p className="text-foreground/80 text-sm leading-relaxed">{question.sampleAnswer}</p>
-                    </div>
-                  </div>
+        <div className="space-y-8">
+          {sections.map((section) => (
+            <Card key={section.title} className="p-6 border-border/50 bg-card/50">
+              <h2 className="text-xl font-bold text-primary mb-4">
+                {section.title}
+              </h2>
 
-                  {/* Key Tips */}
-                  <div>
-                    <h4 className="font-bold text-sm text-primary mb-3">Key Tips</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {question.tips.map((tip, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-2 p-3 bg-background/50 border border-border/30 rounded-lg"
-                        >
-                          <span className="text-primary font-bold text-lg leading-none mt-0.5">✓</span>
-                          <span className="text-sm text-foreground/80">{tip}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Notes Section */}
-                  <div>
+              <div className="grid md:grid-cols-2 gap-3">
+                {section.questions.map((q, index) => (
+                  <div
+                    key={index}
+                    className="border border-border/30 rounded-lg bg-background/40 overflow-hidden"
+                  >
                     <button
-                      onClick={() => toggleNotesVisible(question.id)}
-                      className="flex items-center gap-2 font-semibold text-sm text-primary mb-2 hover:text-accent transition-colors"
+                      onClick={() =>
+                        setOpenQuestion(openQuestion === q ? null : q)
+                      }
+                      className="w-full text-left p-3 text-sm hover:bg-primary/10 transition"
                     >
-                      <MessageCircle size={16} />
-                      {notesVisible.has(question.id) ? "Hide" : "Add"} Personal Notes
+                      {q}
                     </button>
-                    {notesVisible.has(question.id) && (
-                      <textarea
-                        value={notes[question.id] || ""}
-                        onChange={(e) => setNotes({ ...notes, [question.id]: e.target.value })}
-                        placeholder="Write your own answer or key points to remember..."
-                        className="w-full px-4 py-3 text-sm bg-background/50 border border-border/30 rounded-lg focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/40 transition-colors resize-none"
-                        rows={4}
-                      />
+
+                    {openQuestion === q && answerTips[q] && (
+                      <div className="px-4 pb-3 text-sm text-foreground/70 border-t border-border/20">
+                        💡 {answerTips[q]}
+                      </div>
                     )}
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 flex items-center gap-2">
-                      <Play size={16} />
-                      Practice Answering
-                    </Button>
-                    <Button variant="outline" className="border-border/50 hover:bg-primary/10 bg-transparent">
-                      Similar Questions
-                    </Button>
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </Card>
           ))}
         </div>
 
-        {/* Footer Tip */}
-        <Card className="mt-8 p-6 border-primary/30 bg-primary/10 border-2">
-          <p className="text-sm text-foreground/80">
-            <span className="font-bold text-primary">Pro Tip:</span> Practice these questions out loud! Record yourself
-            and watch for filler words, pacing, and clarity. The more you rehearse, the more natural your answers will
-            sound in the actual interview.
-          </p>
+        <Card className="mt-10 p-6 border-primary/30 bg-primary/10">
+          <h2 className="text-lg font-bold text-primary mb-3">
+            Tips for Success
+          </h2>
+
+          <ul className="space-y-2 text-foreground/80">
+            <li>• Research the company before the interview.</li>
+            <li>• Practice your answers clearly.</li>
+            <li>• Maintain confidence and positive body language.</li>
+            <li>• Ask meaningful questions to the interviewer.</li>
+            <li>• Send a thank-you email after the interview.</li>
+          </ul>
         </Card>
+
+        <Card className="mt-10 p-6 border-accent/30 bg-accent/10">
+          <h2 className="text-xl font-bold mb-3 text-accent">
+            Company Wise HR Contacts
+          </h2>
+
+          <p className="text-foreground/70 mb-4">
+            Access company HR contact details to connect with recruiters.
+          </p>
+
+          <Button
+            className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            onClick={() =>
+              window.open(
+                "https://drive.google.com/drive/folders/1hJlxWGMr1UfV9UH84d_HjFP7InTMpPII",
+                "_blank"
+              )
+            }
+          >
+            Open HR Contact List
+            <ExternalLink size={16} />
+          </Button>
+        </Card>
+
       </div>
     </main>
   )
