@@ -160,7 +160,10 @@ npm run dev
 
 ## 📸 Screenshots (Coming Soon)
 
-> Add UI screenshots here to boost recruiter impact 📈
+![Screenshots](prepbuddy1.png)
+![Screenshots](prepbuddy2.png)
+![Screenshots](prepbuddy3.png)
+![Screenshots](prepbuddy4.png)
 
 ---
 
