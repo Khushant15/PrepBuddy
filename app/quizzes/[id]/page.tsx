@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { db } from "@/lib/firebase"
+import { db, auth } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
 import { saveQuizProgress } from "@/lib/progress-service"
 
@@ -33,7 +33,7 @@ export default function QuizPage() {
   const [timeLeft, setTimeLeft] = useState(1800)
   const [progressSaved, setProgressSaved] = useState(false)
 
-  // ✅ FETCH QUESTIONS (FIXED)
+  // ✅ FETCH QUESTIONS (SOURCE-AWARE)
   useEffect(() => {
     if (!quizId) return
 
@@ -41,16 +41,63 @@ export default function QuizPage() {
       try {
         setLoading(true)
 
-        const snapshot = await getDocs(
-          collection(db, "quizzes", quizId, "questions")
-        )
+        // 1. Check if this is a dynamic API-driven quiz
+        if (quizId.startsWith("dynamic-")) {
+            const parts = quizId.split("-")
+            const category = parts[1] || "JavaScript"
+            const difficulty = parts[2] || "Medium"
+            
+            const limit = difficulty === "Easy" ? 30 : 20;
+            const idToken = await auth?.currentUser?.getIdToken()
+            const res = await fetch(`/api/quizzes?category=${category}&difficulty=${difficulty}&limit=${limit}`, {
+                headers: {
+                    "Authorization": `Bearer ${idToken}`
+                }
+            })
+            const data = await res.json()
+            
+            if (data.error) throw new Error(data.error)
 
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Question[]
+            // Map QuizAPI format to our internal Question type
+            const mappedQuestions = data.map((q: any) => {
+                // Find correct answer index (answer_a_correct -> 0, etc.)
+                let correctIdx = 0
+                const keys = ["answer_a_correct", "answer_b_correct", "answer_c_correct", "answer_d_correct", "answer_e_correct", "answer_f_correct"]
+                for (let i = 0; i < keys.length; i++) {
+                    if (q.correctAnswers[keys[i]] === "true") {
+                        correctIdx = i
+                        break
+                    }
+                }
 
-        setQuestions(data)
+                return {
+                    id: q.id,
+                    question: q.question,
+                    options: q.options,
+                    correctAnswer: correctIdx,
+                    explanation: q.explanation
+                }
+            })
+
+            setQuestions(mappedQuestions)
+            // ✅ SYNC TIMER: Fixed 25 minutes (1500 seconds)
+            setTimeLeft(1500)
+        } 
+        // 2. Otherwise, fetch from Firestore (Static/Saved quizzes)
+        else if (db) {
+            const snapshot = await getDocs(
+                collection(db, "quizzes", quizId, "questions")
+            )
+
+            const data = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Question[]
+
+            setQuestions(data)
+            // ✅ SYNC TIMER: Fixed 25 minutes (1500 seconds)
+            setTimeLeft(1500)
+        }
       } catch (err) {
         console.error("Error fetching questions:", err)
       } finally {
@@ -162,7 +209,7 @@ export default function QuizPage() {
               setScore(0)
               setSelectedAnswers([])
               setShowResults(false)
-              setTimeLeft(1800)
+              setTimeLeft(1500)
               setProgressSaved(false)
             }}
             className="w-full"

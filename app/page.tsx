@@ -17,6 +17,12 @@ import {
   Star,
   Users,
   BookOpen,
+  Target,
+  Mail,
+  MapPin,
+  Phone,
+  Github,
+  Linkedin,
 } from "lucide-react";
 
 import { ParticlesBackground } from "@/components/particles-background";
@@ -28,8 +34,10 @@ export default function Home() {
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -37,16 +45,41 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setContactSubmitted(true);
+    setIsSubmitting(true);
+    setStatus(null);
 
-    setTimeout(() => {
-      setContactSubmitted(false);
-      setEmail("");
-      setName("");
-      setMessage("");
-    }, 3000);
+    const formData = new FormData();
+    formData.append("access_key", "0e4a70e0-9df8-45b2-b472-431e5a710291");
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("subject", subject || "New Contact Form Submission from PrepBuddy");
+    formData.append("message", message);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setStatus("success");
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -154,24 +187,24 @@ export default function Home() {
                 </Button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 text-sm">
+              <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8 text-sm font-medium tracking-tight italic">
                 <div className="flex items-center gap-2 text-foreground/80">
-                  <Users size={18} className="text-primary" />
-                  <span>50K+ Students Prepared</span>
+                  <Brain size={18} className="text-primary" />
+                  <span>Score-Based Domain Detection</span>
                 </div>
 
-                <div className="hidden sm:block w-px bg-border/50"></div>
+                <div className="hidden sm:block w-px bg-border/50 h-4 self-center"></div>
 
                 <div className="flex items-center gap-2 text-foreground/80">
-                  <BookOpen size={18} className="text-accent" />
-                  <span>10K+ Practice Questions</span>
+                  <Target size={18} className="text-accent" />
+                  <span>Project-Anchored Match Engine</span>
                 </div>
 
-                <div className="hidden sm:block w-px bg-border/50"></div>
+                <div className="hidden sm:block w-px bg-border/50 h-4 self-center"></div>
 
                 <div className="flex items-center gap-2 text-foreground/80">
-                  <Star size={18} className="text-primary" />
-                  <span>98% Success Rate</span>
+                  <Zap size={18} className="text-primary" />
+                  <span>Entry-Level Career Roadmaps</span>
                 </div>
               </div>
 
@@ -227,60 +260,160 @@ export default function Home() {
 
         {/* ---------------- CONTACT ---------------- */}
 
-        <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-primary/10">
-          <div className="container mx-auto max-w-3xl">
+        {/* ---------------- CONTACT ---------------- */}
 
-            <h2 className="text-4xl font-bold text-center mb-4">
-              Get In Touch
-            </h2>
+        <section id="contact" className="py-24 px-4 sm:px-6 lg:px-8 border-t border-primary/10">
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              
+              {/* Contact Info */}
+              <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-700">
+                <div>
+                  <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Get In Touch
+                  </h2>
+                  <p className="text-foreground/70 text-lg leading-relaxed">
+                    Have a question or want to work together? Drop me a message! Our team will get back to you as soon as possible.
+                  </p>
+                </div>
 
-            <p className="text-center text-foreground/70 mb-12">
-              Have questions? We'd love to hear from you.
-            </p>
-
-            <Card className="p-8 border-primary/20 bg-card/40 backdrop-blur-sm">
-
-              <form onSubmit={handleContactSubmit} className="space-y-5">
-
-                <input
-                  required
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
-                />
-
-                <input
-                  type="email"
-                  required
-                  placeholder="you@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50"
-                />
-
-                <textarea
-                  required
-                  placeholder="Tell us how we can help..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-primary/30 bg-background/50 h-32 resize-none"
-                />
-
-                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent">
-                  Send Message
-                </Button>
-
-                {contactSubmitted && (
-                  <div className="p-3 bg-primary/20 border border-primary/40 rounded-lg text-center text-sm text-primary font-medium">
-                    Thank you for reaching out! We'll get back to you soon.
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-4 group p-3 rounded-xl hover:bg-primary/5 transition-colors duration-300 border border-transparent hover:border-primary/10">
+                    <div className="bg-primary/10 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <Mail className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground/90">Email</h3>
+                      <p className="text-foreground/60 transition-colors group-hover:text-foreground">khushantsharma766@gmail.com</p>
+                    </div>
                   </div>
-                )}
 
-              </form>
+                  <div className="flex items-center space-x-4 group p-3 rounded-xl hover:bg-accent/5 transition-colors duration-300 border border-transparent hover:border-accent/10">
+                    <div className="bg-accent/10 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <MapPin className="w-6 h-6 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground/90">Location</h3>
+                      <p className="text-foreground/60 transition-colors group-hover:text-foreground">Vasai, India</p>
+                    </div>
+                  </div>
 
-            </Card>
+                  <div className="flex items-center space-x-4 group p-3 rounded-xl hover:bg-gray-500/5 transition-colors duration-300 border border-transparent hover:border-foreground/10">
+                    <div className="bg-foreground/10 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <Github className="w-6 h-6 text-foreground/80" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground/90">GitHub</h3>
+                      <a
+                        href="https://github.com/Khushant15"
+                        className="text-foreground/60 transition-colors hover:text-primary"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        github.com/Khushant15
+                      </a>
+                    </div>
+                  </div>
 
+                  <div className="flex items-center space-x-4 group p-3 rounded-xl hover:bg-blue-500/5 transition-colors duration-300 border border-transparent hover:border-blue-500/10">
+                    <div className="bg-blue-500/10 p-3 rounded-lg group-hover:scale-110 transition-transform">
+                      <Linkedin className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground/90">LinkedIn</h3>
+                      <a
+                        href="https://www.linkedin.com/in/khushant-sharma-9318962b2"
+                        className="text-foreground/60 transition-colors hover:text-primary"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        linkedin.com/in/khushant-sharma-9318962b2
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Form */}
+              <div className="animate-in fade-in slide-in-from-right-4 duration-700">
+                <Card className="p-8 border-primary/20 bg-card/40 backdrop-blur-md shadow-2xl shadow-primary/5">
+                  <form onSubmit={handleContactSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground/80 ml-1">Full Name</label>
+                        <input
+                          required
+                          placeholder="Your name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border border-primary/30 bg-background/50 focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-foreground/30"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground/80 ml-1">Email Address</label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="you@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border border-primary/30 bg-background/50 focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-foreground/30"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground/80 ml-1">Subject</label>
+                        <input
+                          required
+                          placeholder="What is this regarding?"
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border border-primary/30 bg-background/50 focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-foreground/30"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground/80 ml-1">Message</label>
+                        <textarea
+                          required
+                          placeholder="Tell us how we can help..."
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border border-primary/30 bg-background/50 focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none transition-all placeholder:text-foreground/30 h-36 resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 py-6 text-base font-semibold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin"></div>
+                          Sending...
+                        </span>
+                      ) : "Send Message"}
+                    </Button>
+
+                    {status === "success" && (
+                      <div className="p-3 bg-primary/20 border border-primary/40 rounded-lg text-center text-sm text-primary font-medium animate-in fade-in slide-in-from-top-1">
+                        Thank you for reaching out! Your message has been sent successfully.
+                      </div>
+                    )}
+
+                    {status === "error" && (
+                      <div className="p-3 bg-destructive/20 border border-destructive/40 rounded-lg text-center text-sm text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                        Oops! Something went wrong. Please try again later.
+                      </div>
+                    )}
+                  </form>
+                </Card>
+              </div>
+
+            </div>
           </div>
         </section>
 

@@ -74,6 +74,15 @@ export default function SignupPage() {
       if (password !== confirm)
         return setError("Passwords do not match")
 
+      // 🛡️ Name Security Validation
+      if (!/[a-zA-Z]/.test(name)) {
+        return setError("Name must contain letters (e.g., John Doe). Just numbers are not allowed.")
+      }
+
+      if (name.trim().length < 2) {
+        return setError("Name is too short (min 2 characters).")
+      }
+
       const result = await createUserWithEmailAndPassword(
         auth,
         email,

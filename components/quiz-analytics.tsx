@@ -1,28 +1,20 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { getQuizHistory } from "@/lib/progress-service"
 import { Card } from "@/components/ui/card"
 import { BarChart3, TrendingUp, Target, Clock } from "lucide-react"
 
-interface QuizAttempt {
-  id: string
-  date: string
-  score: number
-  percentage: number
-  timeSpent: number
-  difficulty: "Easy" | "Medium" | "Hard"
-}
+export function QuizAnalytics({ attemptHistory }: { attemptHistory: any[] }) {
+  if (!attemptHistory) return <div className="p-8 text-center text-[10px] font-black uppercase tracking-widest animate-pulse">Syncing Analytics...</div>
 
-const attemptHistory: QuizAttempt[] = [
-  { id: "1", date: "Today", score: 9, percentage: 90, timeSpent: 12, difficulty: "Medium" },
-  { id: "2", date: "Yesterday", score: 8, percentage: 80, timeSpent: 14, difficulty: "Medium" },
-  { id: "3", date: "2 days ago", score: 10, percentage: 100, timeSpent: 11, difficulty: "Easy" },
-  { id: "4", date: "3 days ago", score: 7, percentage: 70, timeSpent: 15, difficulty: "Hard" },
-]
-
-export function QuizAnalytics() {
-  const avgScore = Math.round(attemptHistory.reduce((sum, a) => sum + a.percentage, 0) / attemptHistory.length)
-  const bestScore = Math.max(...attemptHistory.map((a) => a.percentage))
-  const totalTime = attemptHistory.reduce((sum, a) => sum + a.timeSpent, 0)
+  const avgScore = attemptHistory.length > 0 
+    ? Math.round(attemptHistory.reduce((sum, a) => sum + (a.percentage || 0), 0) / attemptHistory.length) 
+    : 0
+  const bestScore = attemptHistory.length > 0 
+    ? Math.max(...attemptHistory.map((a) => a.percentage || 0)) 
+    : 0
+  const totalTime = attemptHistory.reduce((sum, a) => sum + (a.timeSpent || 15), 0) // Fallback to 15m if not recorded
 
   return (
     <Card className="p-6 border-border/50 bg-card/50">
@@ -64,23 +56,33 @@ export function QuizAnalytics() {
       <div>
         <h3 className="font-semibold mb-3 text-sm">Recent Attempts</h3>
         <div className="space-y-2">
-          {attemptHistory.map((attempt) => (
-            <div
-              key={attempt.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30"
-            >
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">{attempt.date}</p>
-                <p className="text-xs text-foreground/60">
-                  {attempt.difficulty} • {attempt.timeSpent} min
-                </p>
+          {attemptHistory.slice(0, 5).map((attempt, idx) => {
+            const isDynamic = attempt.quizId?.startsWith("dynamic-");
+            const parts = isDynamic ? attempt.quizId.split("-") : [];
+            const category = isDynamic ? parts[1] : "Custom";
+            const difficulty = isDynamic ? parts[2] : "Standard";
+            const dateStr = attempt.completedAt 
+              ? attempt.completedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              : "Just now";
+
+            return (
+              <div
+                key={attempt.id || idx}
+                className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30"
+              >
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">{category} Quiz • {dateStr}</p>
+                  <p className="text-xs text-foreground/60">
+                    {difficulty}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-primary">{attempt.percentage || 0}%</p>
+                  <p className="text-xs text-foreground/60">{attempt.score || 0}/{attempt.total || 0}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-primary">{attempt.percentage}%</p>
-                <p className="text-xs text-foreground/60">{attempt.score}/10</p>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </Card>
